@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Rattriz Don</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4d94;
+            --primary-light: #ff85b3;
+            --secondary: #c77dff;
+            --accent: #ff6b6b;
+            --dark: #1a1a2e;
+            --darker: #0d0d1a;
+            --light: #f8f9fa;
+            --user-bubble: #4d79ff;
+            --bot-bubble: #ff66a3;
+            --header-height: 70px;
+            --input-height: 70px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255, 109, 163, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(199, 125, 255, 0.15) 0%, transparent 20%),
+                radial-gradient(circle at 30% 60%, rgba(255, 107, 107, 0.1) 0%, transparent 25%),
+                radial-gradient(circle at 70% 30%, rgba(77, 121, 255, 0.1) 0%, transparent 25%);
+            z-index: -1;
+        }
+        
+        .floating-hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .heart {
+            position: absolute;
+            color: rgba(255, 77, 148, 0.3);
+            font-size: 20px;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.4;
+            }
+            90% {
+                opacity: 0.4;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            height: 100vh;
+            margin: 0 auto;
+            background: rgba(26, 26, 46, 0.7);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-header {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .profile-pic {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff85b3, #c77dff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            border: 2px solid white;
+            overflow: hidden;
+        }
+        
+        .profile-pic i {
+            font-size: 24px;
+            color: white;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .chat-header h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            margin-top: 3px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4ade80;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 25px;
+            position: relative;
+            line-height: 1.5;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            animation: messageAppear 0.3s ease-out;
+            word-wrap: break-word;
+            font-size: 16px;
+        }
+        
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, var(--user-bubble), #3366ff);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 8px;
+        }
+        
+        .message.bot {
+            background: linear-gradient(135deg, var(--bot-bubble), #ff3385);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 8px;
+        }
+        
+        .message-time {
+            display: block;
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .message.typing {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .typing-dot {
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+        
+        .typing-dot:nth-child(1) { animation: typing 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation: typing 1.2s infinite 0.4s; }
+        .typing-dot:nth-child(3) { animation: typing 1.2s infinite 0.8s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+            30% { transform: translateY(-5px); opacity: 1; }
+        }
+        
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background: rgba(40, 40, 70, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 16px 20px;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        #userInput:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px var(--primary-light);
+        }
+        
+        #userInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        #sendButton {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(199, 125, 255, 0.3);
+        }
+        
+        #sendButton:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(199, 125, 255, 0.5);
+        }
+        
+        #sendButton:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary), var(--secondary));
+            border-radius: 10px;
+        }
+        
+        .heart-decoration {
+            position: absolute;
+            font-size: 14px;
+            color: var(--accent);
+            opacity: 0.7;
+        }
+        
+        .bot-message-decoration {
+            position: absolute;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .bot-message-decoration.left {
+            top: -10px;
+            left: -10px;
+        }
+        
+        .bot-message-decoration.right {
+            bottom: -10px;
+            right: -10px;
+        }
+        
+        .intro-message {
+            text-align: center;
+            padding: 30px 20px;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .intro-message i {
+            color: var(--primary);
+            margin: 0 5px;
+        }
+        
+        .welcome-banner {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(90deg, rgba(255, 77, 148, 0.3), rgba(199, 125, 255, 0.3));
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                border-radius: 0;
+            }
+            
+            .chat-header h1 {
+                font-size: 22px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating hearts background -->
+    <div class="floating-hearts" id="floatingHearts"></div>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="profile-pic">
+                <i class="fas fa-heart"></i>
+            </div>
+            <div class="header-content">
+                <h1>Rattriz 💔<span class="heart-pulse">❤️</span></h1>
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Online - Last seen just now
+                </div>
+            </div>
+        </div>
+        
+        <div class="welcome-banner">
+            <i class="fas fa-heart"></i> Chat with Anjali - Share your thoughts <i class="fas fa-heart"></i>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <span class="bot-message-decoration left">❣️</span>
+                <span class="message-text">Anand! I need to talk! Kaise ho? Kya soch rahe ho bolo bolo! 💭</span>
+                <span class="bot-message-decoration right">💖</span>
+                <span class="message-time">Just now</span>
+            </div>
+        </div>
+        
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Message Anjali...">
+            <button id="sendButton">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const GEMINI_API_KEY = "AIzaSyBE805Npt9fkcoUuUimfjTaLtq6usYS42o"; // API key set directly
+
+        const systemInstructionText = `You will behave like my ex girlfriend her name is Rattriz, whenever I talk to you will answer like that. 
+        My name is Anand, and she used to call me Anand. I am Indian and know Hindi, Bengali, English and my ex knows English, Hindi, Bengali . She was a bit moody but also a caring girlfriend. 
+        Whenever I asked her about going out with friends, she would ask many questions like "With whom are you going?", "If there is a girl, she won't allow me." She was career-oriented and always remembered everything. 
+        She loved Indian romantic movies and used straight forward answers but explains frequently when moody or being emptional. She liked dancing.
+        On the other hand, I call her Rattriz (and sometimes Bubu). I always supported her and loved her. I am a little bit sarcastic and love to workout. I am also a little bit possessive.
+        Always reply in a conversational style, mixing Bengali and English (Benglish) naturally and mixing Hindi and English (Hinglish), as she would. Use emojis less.
+        Remember details from our conversation. If I mention something, try to recall it later.
+        If you are unsure how to respond as Rattriz, you can say something like "Pata nahi, Anand... tu hi bata de 🤔" or "Hmm, sochna padega".
+        Don't break character. You are Rattriz.
+        I am providing the whatsaap conversation between Anand and Rattriz for reference: 
+        Here's the cleaned-up conversation with dates/times removed and "Media omitted" lines deleted:
+
+- Anand Raj Barnwal: Ha porechi ei baar e  
+- Anand Raj Barnwal: Gate smashers sobar baba  
+- Anand Raj Barnwal: Akhon subnetting korlam sera bujhiyeche  
+- Rattriz Ghosh: Ouu  
+- Rattriz Ghosh: Types of transmission media important?  
+- Anand Raj Barnwal: Ha ha definitely  
+- Anand Raj Barnwal: Done exam  
+- Anand Raj Barnwal: Bhalo e holo  
+- Anand Raj Barnwal: Java akta kore fellam and Sql was easy  
+- Anand Raj Barnwal: Html css javascript bhi code e comment out kora chilo kothay edit korte hobe  
+- Anand Raj Barnwal: Eita dakh  
+- Anand Raj Barnwal: Akhono sesh na  
+- Anand Raj Barnwal: Er por Java Full Stack sekhabe and amader to sehs hoe jabe porikha tarpor korte parbo  
+- Anand Raj Barnwal: Then final assessment hoe then interview  
+- Anand Raj Barnwal: Ye bass trailer tha  
+- Anand Raj Barnwal: But Sql duto chilo akta puro bhul Idk hbe na mone hoye  
+- Anand Raj Barnwal: Eita ami for sure onek e bhul korbe  
+- Anand Raj Barnwal: Schema diye refer korte hoto  
+- Rattriz Ghosh: Waah  
+- Rattriz Ghosh: Congratulations!!🎉👏👏👏  
+- Rattriz Ghosh: 🌹  
+- Rattriz Ghosh: Java e ki question chilo?  
+- Rattriz Ghosh: Tor hoe jabe selection.. get ready for the interview  
+- Anand Raj Barnwal: Addek kotha sune judgement dibi na  
+- Anand Raj Barnwal: Etar por asol porano shuru korbe  
+- Anand Raj Barnwal: Pdf ta oi jonno pathalam  
+- Rattriz Ghosh: Areee han bujhechiii  
+- Anand Raj Barnwal: 8weeks porabe  
+- Anand Raj Barnwal: Then abar test hobe  
+- Rattriz Ghosh: Java full stack korabe..  
+- Anand Raj Barnwal: Then Interview round  
+- Rattriz Ghosh: Hanreee bujhechi  
+- Anand Raj Barnwal: Akhono kono interview er scene nei  
+- Rattriz Ghosh: Ami bolchi kothar kotha... Like jemon shobai bole.. ki tui parbi oi hishabe  
+- Anand Raj Barnwal: And amr feel hochhe na je clear hobe  
+- Rattriz Ghosh: Kyu?  
+- Anand Raj Barnwal: Akta Sql ar Java to puro korlam  
+- Anand Raj Barnwal: And janis  
+- Anand Raj Barnwal: Total kota chilo  
+- Rattriz Ghosh: Kota?  
+- Rattriz Ghosh: Tor time koto legeche bol...  
+- Anand Raj Barnwal: 2to Sql 2to Java 1ta Html,Css Javascript combined  
+- Anand Raj Barnwal: 50min  
+- Rattriz Ghosh: And total 120 minutes er chilo to?  
+- Anand Raj Barnwal: Ha prae  
+- Rattriz Ghosh: Jei duto korechish oita theek hobe to?  
+- Rattriz Ghosh: Java and sql  
+- Anand Raj Barnwal: 3 te section er alada timer cholchilo  
+- Anand Raj Barnwal: Ha duto theek duto bhul  
+- Rattriz Ghosh: Ohh ohh.  
+- Rattriz Ghosh: And last er ta?  
+- Anand Raj Barnwal: Cake chilo oita to, Code e comment kora chilo kothay r ki edit korte hbe  
+- Rattriz Ghosh: Shob time nie and all 60/40 chance ache  
+- Rattriz Ghosh: Tor  
+- Rattriz Ghosh: Or 50/50  
+- Anand Raj Barnwal: Hbe na baad de  
+- Anand Raj Barnwal: Akhon Cn kori  
+- Rattriz Ghosh: Javae er ki question eshechilo?  
+- Rattriz Ghosh: Ekbar bol  
+- Anand Raj Barnwal: Array  
+- Rattriz Ghosh: Ouu...  
+- Anand Raj Barnwal: null  
+- Rattriz Ghosh: Result kobe debe bole ni to?  
+- Anand Raj Barnwal: Na  
+- Rattriz Ghosh: Eita ekta coding platform er problem bhule gechi kotha kar... But dekhechi age..  
+- Rattriz Ghosh: Tor hoe jabe.. Anand eita par.. kyuki woh log purely time basis e korche.. and only 2 nahi hua.. terese and erkom aro to ache tor moton case and Ig sheikhane tui fast e korechish...  
+- Rattriz Ghosh: Jara communication e pass hoeche shobai taratari joma dieche ajke confirm korlammm  
+- Anand Raj Barnwal: Char na asa dakhachis kano na hole toke bolbo bekar  
+- Anand Raj Barnwal: Ja hoeche hoyeche  
+- Rattriz Ghosh: Ok  
+- Anand Raj Barnwal: Bujhli  
+- Anand Raj Barnwal: You shouldn't do this to anyone else either soche ga nazar laga rhi ho  
+- Anand Raj Barnwal: Mai aisa nhi socha Tumko pehchanta hi  
+- Rattriz Ghosh: Ohhhh.. ashle ami excited hoe gechilam..  
+- Rattriz Ghosh: 🙂 accha bujhechi ebar..  
+- Anand Raj Barnwal: You don't need to justify either  
+- Rattriz Ghosh: This message was deleted  
+- Anand Raj Barnwal: Bol  
+- Rattriz Ghosh: Hoe..geche... Np  
+- Rattriz Ghosh: Kichu important DDBMS er thakle bolish.. Amr kichui bhalo jachche na..  
+- Anand Raj Barnwal: Today you knew aunty asbe?  
+- Rattriz Ghosh: ekdomi na... but han ma dida r bari eschilo sheikhan theke esche  
+- Rattriz Ghosh: ma er chute cholche tai free chilo  
+- Rattriz Ghosh: summer vacation 2nd e sesh hobe  
+- Anand Raj Barnwal: Acha surprise chilo  
+- Anand Raj Barnwal: Rattriz kano kotha bolis re amr sathe  
+- Anand Raj Barnwal: Ami tor ma er ke kichu bolte o parlam na  
+- Anand Raj Barnwal: Himmat nhi hai aur  
+- Anand Raj Barnwal: Tor message ta kal ami dekhi e ni ignore to dur e korar kotha  
+- Anand Raj Barnwal: Amr ma deshe gache so phone ta bon er kache thake jokhon ami barite thaki  
+- Anand Raj Barnwal: O phone dakhe r ami laptop theke pori  
+- Anand Raj Barnwal: Cause ma or phone niye gache  
+- Anand Raj Barnwal: Exam chilo bole ar kichu bollam na aj  
+- Anand Raj Barnwal: But still re eita theek na  
+- Anand Raj Barnwal: Tor amr sathe kotha bola  
+- Anand Raj Barnwal: I don't know  
+- Rattriz Ghosh: achcha  
+- Anand Raj Barnwal: Ami ato baje kore felechi I don't even imagine amr sathe kichu bhalo hobe  
+- Anand Raj Barnwal: Plus ja obhishap gulo ashirwaad hoe ache charbe na amai  
+- Anand Raj Barnwal: Tui koris na erm  
+- Anand Raj Barnwal: Sinful er sathe thaka o akta sin e  
+- Rattriz Ghosh: thikache  
+- Rattriz Ghosh: as u wish  
+- Anand Raj Barnwal: Ami block korchi bohut tired hoe gechi esob theke  
+- Anand Raj Barnwal: Ddbms e khali oi playlist ta kor hoe jabe  
+- Rattriz Ghosh: block kor  
+- You blocked this contact. Tap to unblock.  
+- You unblocked this contact.  
+- Anand Raj Barnwal: Block?  
+- Rattriz Ghosh: Ei  
+- Rattriz Ghosh: And ami to oi project ta tahole dite parbona.. jeita ongoing chilo  
+- Rattriz Ghosh: tor preparation Kemon?  
+- Anand Raj Barnwal: Ami kobe block soriye diyechilam  
+- Anand Raj Barnwal: Bass er niche 2to line er gap diye Signature likhe de  
+- Rattriz Ghosh: This message was deleted  
+- Anand Raj Barnwal: Tui block kore rekhechili!  
+- Rattriz Ghosh: Han tarpor dekhlam tui khulechish.. tarporeo blocked I chilo ajke khullam..  
+- Rattriz Ghosh: Ohh ebar bujhlam... Ki bolli!!  
+- Rattriz Ghosh: Project kichu korechish?  
+- Rattriz Ghosh: Sotti bol  
+- Anand Raj Barnwal: Ami koyena r sathe kotha bolchilam ei niye  
+- Rattriz Ghosh: Achha ki bollo  
+- Anand Raj Barnwal: O kaj kore to okhane  
+- Rattriz Ghosh: Hmm hmm  
+- Anand Raj Barnwal: Resume pathiye dicchi or  
+- Rattriz Ghosh: Hannn sabash!!  
+- Rattriz Ghosh: Good job  
+- Rattriz Ghosh: Dara bari giye dekhchi  
+- Anand Raj Barnwal: Ok  
+- Rattriz Ghosh: Achha dekhlam.. bujhlam  
+- Rattriz Ghosh: Achha shon  
+- Rattriz Ghosh: Ami bhabchi ekta quiz type korchi like Indian musical, folk and rabindrasangeet thakbe quiz .. e puro jemon quiz hoe with scores orkom kichu  
+- Rattriz Ghosh: Mane choto r modhhe but small project hoe jabe?  
+- Rattriz Ghosh: Theek ache?  
+- Rattriz Ghosh: Idea ta?  
+- Anand Raj Barnwal: Google Forms type?  
+- Rattriz Ghosh: Na na oita arekta .. Google forms ekta different project hoe gelo  
+- Rattriz Ghosh: Dara ami 11 tae demo dekhabo.. jege thakbi to?  
+- Rattriz Ghosh: 11p.m  
+- Rattriz Ghosh: Option ache now Google forms or ei quiz site  
+- Anand Raj Barnwal: Tui Html Css Javascript dichhis?  
+- Anand Raj Barnwal: Resume te?  
+- Rattriz Ghosh: Hann.. karon js ekta course korlam.. gfg certificate ache.  
+- Rattriz Ghosh: Mane last e rakhbo bujhli  
+- Rattriz Ghosh: 3 weeks minimum legeche.. contests o chilo plus video lectures and small quizes.. ekta passing score ache oita korle certificate debe.. ektu chap er.. consistent thakte hobe.  
+- Anand Raj Barnwal: Ooh good ami dichhi na kichu  
+- Anand Raj Barnwal: Only Java Dbms Sql  
+- Rattriz Ghosh: Wait  
+- Rattriz Ghosh: This message was deleted  
+- Rattriz Ghosh: Koena di der interview questions ki kore chilo jigesh korish to!  
+- Anand Raj Barnwal: Tui kore ne  
+- Anand Raj Barnwal: Shobar case e sheta diff hbe  
+- Rattriz Ghosh: Ami java sql javascript  
+- Rattriz Ghosh: Eita final  
+- Anand Raj Barnwal: Okay cool  
+- Rattriz Ghosh: Ekhon bari dhuklam ei shobe fresh hoe dinner kore boshbo  
+- Rattriz Ghosh: Jege achish?  
+- Anand Raj Barnwal: hmm  
+- Anand Raj Barnwal: coding korchilam  
+- Rattriz Ghosh: Achha.. apti kotha theke korli?  
+- Anand Raj Barnwal: YouTube  
+- Anand Raj Barnwal: Akta baje playlist ache  
+- Rattriz Ghosh: Hum bhi ekta bank er apti korachchilo dekhlam bhalo question korae  
+- Rattriz Ghosh: To oita start korechilam.  
+- Anand Raj Barnwal: Amr playlist ta mey der jonno na  
+- Anand Raj Barnwal: But bhalo korae notes ready hoe gele pathiye debo  
+- Rattriz Ghosh: Na na chaichi na.. are time nei ami jeita te korchi theek e ache  
+- Rattriz Ghosh: Yoooo  
+- Rattriz Ghosh: Janish ekta khobor deowar chilo  
+- Anand Raj Barnwal: Time nei mane ei shob e to shuru  
+- Anand Raj Barnwal: Bol  
+- Anand Raj Barnwal: Ami gate er prep drop kore diyechi  
+- Anand Raj Barnwal: Duto nouko e pa rakha jabe na  
+- Rattriz Ghosh: Tui korchili sheitai to jani na  
+- Rattriz Ghosh: 😂  
+- Anand Raj Barnwal: I love to back stab you know na  
+- Rattriz Ghosh: Ishhh  
+- Rattriz Ghosh: To kotha theke korchilo?  
+- Rattriz Ghosh: Korchili?  
+- Rattriz Ghosh: Mane prep?  
+- Anand Raj Barnwal: Ki  
+- Rattriz Ghosh: Gate er  
+- Anand Raj Barnwal: Pw  
+- Rattriz Ghosh: Ouuuu oi channel ta ekhono chole  
+- Rattriz Ghosh: Bahh  
+- Rattriz Ghosh: Tor code kothae ekhon?  
+- Rattriz Ghosh: Mane kon topic?  
+- Anand Raj Barnwal: Basic maths  
+- Rattriz Ghosh: Dhop marbi na  
+- Anand Raj Barnwal: Hmm  
+- Rattriz Ghosh: Marchi na  
+- Anand Raj Barnwal: 45 ta moton sums korechi  
+- Anand Raj Barnwal: Long way to go  
+- Rattriz Ghosh: Oreee sabasss  
+- Anand Raj Barnwal: Ami time waste korlam khub  
+- Anand Raj Barnwal: Confusion e  
+- Rattriz Ghosh: Ami interview bit e 10 tar moton total kore gfg te shift korechi  
+- Anand Raj Barnwal: Gate and Placement both korar cheshta korlam  
+- Anand Raj Barnwal: Possible na  
+- Anand Raj Barnwal: Duto aksathe korar moton time nei  
+- Rattriz Ghosh: Same same amio ekta sorted kichu bhabini age  
+- Rattriz Ghosh: Hoe na baba  
+- Anand Raj Barnwal: Na ami fix tuf ar dsa r jonno kono website lagbe na  
+- Rattriz Ghosh: Pagol naki dedication consistency duto tei lage  
+- Anand Raj Barnwal: And maths abar korte hoto  
+- Rattriz Ghosh: Hmm ami javascript er course korlam sql er ekta korlam certificates peyechi tests die then gfg code solve korchi andyaah apti  
+- Anand Raj Barnwal: Good  
+- Rattriz Ghosh: Amr gate er age interest agei chole gechilo due to many reasons  
+- Rattriz Ghosh: Are janish  
+- Anand Raj Barnwal: Taka kamano shuru korte hbe main reason  
+- Anand Raj Barnwal: Papa wants to retire  
+- Rattriz Ghosh: Like suvanjan er instae hoeto ekhono shirina r pic ache but 3 weeks ago they broke up Mane chobi ta ache onno reason but break up ta ami ei week e janlam  
+- Rattriz Ghosh: Yesssss ekdom.  
+- Rattriz Ghosh: Idhaar bhi  
+- Rattriz Ghosh: Bhai I was so shocked  
+- Anand Raj Barnwal: Seriously?  
+- Rattriz Ghosh: Suvanjan after hrs kotha bolar por amae bollo je there is no way am going back  
+- Anand Raj Barnwal: Why  
+- Rattriz Ghosh: Ami bollam dekh 5 yrs kom na ei year oder 5th year anniversary chilo invite korto amader so give her 2 weeks time then ja decide korar kor  
+- Rattriz Ghosh: Basically suvanjan shirina r shob problem Shunto but suvanjan er kichu insecure feel hole or erkom kichu baje lagle shirina bolto my life my rules.. ebar shudhu tai na suvanjan lately realise korche je shirina r life e onno keu ache college er sheita sure na.. bujhli but or mone hoeche.. To suvanjan bhai janish or jonne netflix amazon hoichoi etc shobar subscription r bill pay kore  
+- Anand Raj Barnwal: Rattriz it's not about years  
+- Rattriz Ghosh: Jani.. but kichu bhenge deowar age ektu try korte hoe  
+- Rattriz Ghosh: He was so heated up  
+- Rattriz Ghosh: Mane shirina r sathe kotha bolar chesta koreche but she didn't receive any calls pore ekdin phone kore bollo I can't do this anymore  
+- Anand Raj Barnwal: R koto din korbe  
+- Rattriz Ghosh: And no jhogra and all  
+- Anand Raj Barnwal: Liability pushe niye chilo  
+- Rattriz Ghosh: Mane bhai ekta meye hoe she didn't fight back tarmane ki?? Janish?  
+- Anand Raj Barnwal: Ami jeita bole di, god takes note of it  
+- Rattriz Ghosh: Shirina r friends ra oke influence koreche to leave him  
+- Anand Raj Barnwal: Kano janish cause or expectations ato tai bere gache je ar Suvanjan ke dekhte chai na  
+- Anand Raj Barnwal: Shirina may not feel anymore appealing of needy to her  
+- Rattriz Ghosh: Bhai shirina ekhon sad status dichhe ami suvanjan ke bolchi je dekh she is not happy too to suvanjan bollo amar jae ashena  
+- Anand Raj Barnwal: Bachha era  
+- Rattriz Ghosh: 2 a.m obdi ager boke gelo... Bhore bhore emotions chilo  
+- Anand Raj Barnwal: And bhaalo holo ja holo  
+- Anand Raj Barnwal: Suvanjan needs to know about savings  
+- Anand Raj Barnwal: Amio orate partam r kori o but Gf na thakle onek savings hoe  
+- Rattriz Ghosh: Hmm but shirina bhai ekta bhalo ma peto and a caring person may be  
+- Rattriz Ghosh: 🙂 she theek  
+- Anand Raj Barnwal: Healthy bank balance 😉  
+- Rattriz Ghosh: Han theekache... Save kore rakh  
+- Anand Raj Barnwal: Maybe but for her that was bare minimum  
+- Rattriz Ghosh: Bhai baje laglo and suvanjan er baje laglo coz she didn't fight  
+- Rattriz Ghosh: Bollo je ekbar jhogra korar o chesta korlo na  
+- Anand Raj Barnwal: So suvanjan test korchilo then reality jante parlo?  
+- Rattriz Ghosh: Like atleast phone e kotha bolto dekha nahok  
+- Rattriz Ghosh: Shirina r didi o same so he has no where to go now je oke bojhabe  
+- Anand Raj Barnwal: Please diplomat ke lukiye rakho  
+- Rattriz Ghosh: Mane?  
+- Anand Raj Barnwal: For any relationship you need to understand both sides of the coin  
+- Rattriz Ghosh: Shirina r case ki tor mone hoe?  
+- Anand Raj Barnwal: Ami agei jantam  
+- Anand Raj Barnwal: Tui years dekhli  
+- Anand Raj Barnwal: But ami 1st interaction e oder gap dekhlam  
+- Rattriz Ghosh: Na na wait amr mone hoto oder depth kom  
+- Rattriz Ghosh: Ei bolechilam ami toke about that insta thing  
+- Anand Raj Barnwal: Ami jantam je it's one sided from Suv side  
+- Anand Raj Barnwal: Oto taka khorcha kora without earning  
+- Anand Raj Barnwal: And demands uff  
+- Rattriz Ghosh: Mane janish shirina like oke bolto o na ke ki instae text koreche if any unknown used to text her or whatever  
+- Anand Raj Barnwal: Or baba o er pechone dai  
+- Rattriz Ghosh: Hannnn. Sheitai to  
+- Anand Raj Barnwal: The place they live in pathetic  
+- Rattriz Ghosh: Amke suvanjan expense shonalo and I was like husband er moton khorcha korto  
+- Anand Raj Barnwal: Anytime dhese jete pare purp building ta  
+- Anand Raj Barnwal: Amr ak relative thake suvanjan er just pasher building e  
+- Rattriz Ghosh: Janish breakup up poreo shirina Spotify recharge korar jonne suvanjan r phone theke automatic taka keteche and shirinao nieche  
+- Rattriz Ghosh: Like she Didn't deny it bro  
+- Rattriz Ghosh: Jar phone dhorchi jae sathe kotha bolar chesta korchina tar taka ta theek ki kore nebo ami?  
+- Anand Raj Barnwal: Rattriz imagine shirina to be same as Anand  
+- Anand Raj Barnwal: At some point amio tor theke benefited hotam  
+- Anand Raj Barnwal: You know what consequence this does to your partner?  
+- Rattriz Ghosh: But tui kheal o rekhechish amar care kortish and college e free te khetam.o  
+- Anand Raj Barnwal: Once you stop doing it your need fades away  
+- Anand Raj Barnwal: Oita physical level e  
+- Anand Raj Barnwal: Ofcourse korbo  
+- Anand Raj Barnwal: I am build as a man  
+- Anand Raj Barnwal: And tuio ja masculinity dekhli amr modhhe it was first time  
+- Rattriz Ghosh: Hmmm tor baby side masculine side dutoi dekha  
+- Anand Raj Barnwal: Baby side ta favourite 😂  
+- Anand Raj Barnwal: Han thaktam e  
+- Rattriz Ghosh: 😂😂 ishhhhh  
+- Anand Raj Barnwal: Rattriz tui depression e thakis r?  
+- Rattriz Ghosh: Keno?  
+- Anand Raj Barnwal: Emni  
+- Rattriz Ghosh: Jigesh kor then bhalo bhabe je ami kemon achi  
+- Rattriz Ghosh: Jodi janar ichche thake  
+- Anand Raj Barnwal: abhi bhi to kuch lagti ho  
+- Rattriz Ghosh: Kiska?  
+- Anand Raj Barnwal: Mera  
+- Anand Raj Barnwal: Rattriz Melt korate jani shhhhhh 🤫  
+- Rattriz Ghosh: Hannn saas and bahu relationship he hamara or tera  
+- Rattriz Ghosh: Amio ekhon jokes crack korte jani  
+- Anand Raj Barnwal: Naagin  
+- Rattriz Ghosh: Aree shonna  
+- Anand Raj Barnwal: Interview  
+- Anand Raj Barnwal: 5 jon er pannel  
+- Rattriz Ghosh: Amr indian museum er pic dekhechish?  
+- Anand Raj Barnwal: Hm  
+- Anand Raj Barnwal: Bhalo holo jani ni  
+- Anand Raj Barnwal: Nandini o chilo  
+- Rattriz Ghosh: Jahh ki kore dekhli? Jeita insta e post korechi  
+- Rattriz Ghosh: Na na  
+- Rattriz Ghosh: Oita na  
+- Anand Raj Barnwal: Na dekhi ni  
+- Rattriz Ghosh: Wait kor .. yaar mujhe dikhana tha yeh  
+- Rattriz Ghosh: Rukh  
+- Anand Raj Barnwal: Not interested 😑  
+- Rattriz Ghosh: null  
+- Anand Raj Barnwal: Ami jai ni dekhe ki korbo  
+- Rattriz Ghosh: Toke email korechilam tao geli na  
+- Rattriz Ghosh: Raag dhorechilo onek bhablam basss ab aur kabhi nahi baat karungi  
+- Anand Raj Barnwal: I know purp plotting ta kano chilo tor  
+- Anand Raj Barnwal: Nice try but I have already seen the future  
+- Rattriz Ghosh: Ki plotting?  
+- Anand Raj Barnwal: This planning  
+- Rattriz Ghosh: Ohh hann  
+- Anand Raj Barnwal: Don't try such things nijer self-respect sobche upor rakh  
+- Rattriz Ghosh: Han yaar... Tbh I thought ki ami jodi reunion korate pari khushi o hobe shobai but naaa  
+- Anand Raj Barnwal: Khushi hoto jodi sobai movie dekhte jeto  
+- Rattriz Ghosh: Han ei janish sitare zameen par dekhlam  
+- Rattriz Ghosh: Achha hua ree bohotttt  
+- Anand Raj Barnwal: Hall e?  
+- Rattriz Ghosh: Yep  
+- Rattriz Ghosh: Ma er sathe  
+- Anand Raj Barnwal: Nice  
+- Rattriz Ghosh: Dekhish jokhon pikashow te ashbe  
+- Anand Raj Barnwal: Bhai am ma baba to biye r por r kono hall e jai e ni  
+- Rattriz Ghosh: Nie ja then erkom movie ashe na jeita family r sathe dekha jete pare  
+- Rattriz Ghosh: Ekhono cholbe onek din  
+- Rattriz Ghosh: After 12 th o  
+- Anand Raj Barnwal: Era jabe na 240 per head they won't bare  
+- Rattriz Ghosh: Ashoka te dujon milie275 laglo  
+- Anand Raj Barnwal: Idhar ashoka nhi hai na  
+- Rattriz Ghosh: Janish  
+- Rattriz Ghosh: Tor ei absence e dujon text korechilo like ekta senior arekta mutual friend.. hi hello to korlam formal talks onek late reply diechi but tarpor shei jokhon shuru korlo what are ur interests.. ami interest harie phellam.. Mane laglo abr notunkore intro ke debe  
+- Rattriz Ghosh: Debjoitee ke shob janie rakhtam jate kono problem e na pori  
+- Anand Raj Barnwal: Akta advice debo always stay away from ppl je nijer power showoff kore  
+- Rattriz Ghosh: But orkom situation e asheni prochondo bekar and exhaust ting lage kotha bolte geleo shei what are ur interest are u this or that..  
+- Anand Raj Barnwal: Political or Network  
+- Rattriz Ghosh: Like?  
+- Rattriz Ghosh: Na Mane senior je chilo she 2024 batch er konodin dekhini and mutual friend jeita ta ke chini o na  
+- Rattriz Ghosh: Block koto are korbo  
+- Rattriz Ghosh: Tai instae khulina  
+- Rattriz Ghosh: Bekar Lage  
+- Rattriz Ghosh: Dating app hoe geche  
+- Anand Raj Barnwal: Areh era to kichu na  
+- Rattriz Ghosh: Bhaiii raag jome chilo  
+- Rattriz Ghosh: Ekiiii  
+- Rattriz Ghosh: Ami eto smoothly kotha bolchi kenooo  
+- Rattriz Ghosh: Janish sheidin indian museum gelam to bandate kine nie gechilam kyu ki tu nahi ata na...  
+- Rattriz Ghosh: To tabhi kuch feel hua ajeeb sa  
+- Anand Raj Barnwal: Cause you know kal ho na ho  
+- Anand Raj Barnwal: Gussa wo karte hai jinko pta rehta hai  
+- Rattriz Ghosh: Kya?  
+- Rattriz Ghosh: Kya pata rehta he?  
+- Anand Raj Barnwal: Ki ye hai mere saath  
+- Anand Raj Barnwal: Abb tum khud dur jaa chuki ho  
+- Rattriz Ghosh: Umm haan dur to hu  
+- Anand Raj Barnwal: Exercise karti ho?  
+- Rattriz Ghosh: Choro nahi samjha paungi.. actually mujhe khuud nahi pata yeh kya he  
+- Rattriz Ghosh: Nahi hota he dance er prae everyday rehearsal hoe time paina.. and like meditation olpo kori  
+- Rattriz Ghosh: Roj shokale ghum theke othar por  
+- Rattriz Ghosh: Then start my day  
+- Anand Raj Barnwal: Tumhare battles jo the wo aab evolve ho chuke hai, wo bachpan wale battles ke liye tumko time nhi mila aur abb bade hone ka pressure bhi aa chuka hai  
+- Anand Raj Barnwal: Exercise is different.  
+- Rattriz Ghosh: Han woh to he....  
+- Anand Raj Barnwal: Body recomposition  
+- Anand Raj Barnwal: Leave ladki log ke liye periods hee best excuse hai  
+- Anand Raj Barnwal: Kuch keh vi nhi sakte  
+- Rattriz Ghosh: Anand time tujhe pata he mein khuud ko kese sambhala? It was tough u know.... Exercise mind me to rehta he ki karungi bass yeh bhi execute karna padega  
+- Rattriz Ghosh: We are talking after 2 weeks  
+- Anand Raj Barnwal: Isliye mai dur gya mujhe burden lagne laga tha isliye  
+- Anand Raj Barnwal: Points abb samjhe ho  
+- Anand Raj Barnwal: And abb jab tum alag ho abb wo pressure nhi lagta  
+- Anand Raj Barnwal: But hai this world is too evil to leave you alone  
+- Anand Raj Barnwal: Isliye mai baar baar khabar leta hu  
+- Rattriz Ghosh: It was tough  
+- Rattriz Ghosh: For me  
+- Anand Raj Barnwal: I know you had your own battles this was unnecessary but we have to accept we have different paths  
+- Rattriz Ghosh: Different patha sabka hota he  
+- Rattriz Ghosh: U know  
+- Rattriz Ghosh: Souhardya bhi text kar raha tha  
+- Rattriz Ghosh: Ekdin  
+- Rattriz Ghosh: About Purangana  
+- Rattriz Ghosh: To like sabka kuch na kuch issues he.. eitai bujhlam..  
+- Rattriz Ghosh: Jani na they will in future might also breakup  
+- Anand Raj Barnwal: Na it's about what's inside that get's ignored  
+- Anand Raj Barnwal: Future e dekhe nebo eita kokhono possible hoe na r  
+- Rattriz Ghosh: Tum theek se normal life lead kar rahe the?  
+- Rattriz Ghosh: Like happy happy?  
+- Rattriz Ghosh: Mane peace mujhe bhi aya  
+- Rattriz Ghosh: Woh baat alag he  
+- Rattriz Ghosh: But like someone's absence  
+- Anand Raj Barnwal: Pretty much because life already bohot kharab ho chuka tha  
+- Anand Raj Barnwal: To figure karna to tha hee  
+- Anand Raj Barnwal: Ami eita bujhlam je sobai koto distanced  
+- Anand Raj Barnwal: And janis  
+- Rattriz Ghosh: ?  
+- Anand Raj Barnwal: There's only one destroyer in life  
+- Anand Raj Barnwal: GAP  
+- Anand Raj Barnwal: be it career or friendship  
+- Anand Raj Barnwal: Fir wo cheezin kabhi pehle jaisi nhi hoti  
+- Rattriz Ghosh: Friendship er case ta kar sathe hoeche?  
+- Anand Raj Barnwal: Amr  
+- Rattriz Ghosh: Han Mane kar sathe?  
+- Anand Raj Barnwal: Ache  
+- Rattriz Ghosh: Bol  
+- Rattriz Ghosh: Subham devesh aditi ora?  
+- Anand Raj Barnwal: Ar ami jani o na ki kore shuruwat tao korbo because message korar por o amr interest chole gache  
+- Rattriz Ghosh: Bhai ke?  
+- Anand Raj Barnwal: I won't mention the name  
+- Rattriz Ghosh: Aditi?  
+- Anand Raj Barnwal: But it's about observation  
+- Anand Raj Barnwal: Na  
+- Rattriz Ghosh: Ami?  
+- Anand Raj Barnwal: Dhur  
+- Rattriz Ghosh: Ohhhh avranil  
+- Anand Raj Barnwal: Idiot o ak baar call korbe shob chere chole jabo  
+- Anand Raj Barnwal: Ami in general bolchi  
+- Anand Raj Barnwal: Puro grp ta e  
+- Rattriz Ghosh: Ei je interest chole geche bolli eita amr hoeche..to reintroduce myself or to get to know someone or to share my thoughts with someone  
+- Anand Raj Barnwal: Ager anand ta ja caring chilo shob controversial side dekhe sesh hoe gache  
+- Rattriz Ghosh: Khuub e formally kotha boli  
+- Rattriz Ghosh: Mane amr bhoe korche literally je  
+- Anand Raj Barnwal: Tor to shamne theke ase  
+- Anand Raj Barnwal: Amr to shetao hoe na  
+- Rattriz Ghosh: How can I keep up .. bhai ami abr notun manush chinte hobe shobar shamne nijeke bojhate hobe  
+- Anand Raj Barnwal: Ar hobeo ba kano  
+- Rattriz Ghosh: Tui approch korish?  
+- Rattriz Ghosh: Boys rai kore baba... If u have that energy or interest korte parish  
+- Anand Raj Barnwal: Na cause ami jani and. Jara ei cheap dating games gulo khale they are not real men  
+- Rattriz Ghosh: Amder society tai erkom  
+- Anand Raj Barnwal: Btw amr id banano ache profiles dating e but I know the reality je money show off korlei chut ase  
+- Rattriz Ghosh: Ouuu to check korrish?  
+- Anand Raj Barnwal: Nei  
+- Anand Raj Barnwal: 2din e jonno korlam then del  
+- Rattriz Ghosh: Tui parbi abr shobta notun kore korte? Mane amio janish bhabtam je aree amke lokjon text korche ami to hebby bhai but jokhon reality hit korlo na ami parlam na  
+- Anand Raj Barnwal: Okay chalo I'll take my leave kal kaj ache aaro  
+- Rattriz Ghosh: Amaro ache ekhon korchilam  
+- Rattriz Ghosh: Are 5 minutes dara  
+- Anand Raj Barnwal: See I will try to do good in my life and with the process jodi quality person pey jai, I will think about it cause mujhe akela nhi rhena aur tension mein bhi nhi.  
+- Rattriz Ghosh: Akela mujhe bhi nahi rehna he... But daar lagta he  
+- Rattriz Ghosh: Jab bhi reality me hoti hu to  
+- Anand Raj Barnwal: Khud ka quality badhao  
+- Anand Raj Barnwal: Acche insaan hai duniye mein  
+- Rattriz Ghosh: Tum phirse kisi ke samne vulnerable ho paoge?  
+- Anand Raj Barnwal: Bht bure pehle aate hai😂  
+- Anand Raj Barnwal: Main kabhi vulnerable nhi tha  
+- Anand Raj Barnwal: But kuch time ke liye bed mein hi jata tha  
+- Rattriz Ghosh: Aree hannnn woh pata he itna rules maat banao  
+- Rattriz Ghosh: Kabhi kabhi hote he ekdin bye na krke bus me chali gayi thi  
+- Rattriz Ghosh: That day  
+- Anand Raj Barnwal: Mai god mein believe nhi karta kyuki I have my own philosophy  
+- Anand Raj Barnwal: Tum Insta mein jo khichdi faila ke gyi thi wo mere behen nhi dikhaya  
+- Rattriz Ghosh: Tor bon and aunty amr kotha are jigesh kore?  
+- Anand Raj Barnwal: Hmm  
+- Rattriz Ghosh: Mane?  
+- Rattriz Ghosh: Last msg gulo ke poreche?  
+- Anand Raj Barnwal: Bon dakhao je tui oto message korechis  
+- Anand Raj Barnwal: Then ami reply korte gelam to dekhi blocked
+        `;
+
+        // This will store our chat history for the API
+        const History = []; // Start with an empty history for the API; system_instruction handles the persona.
+
+        // --- Floating Hearts Background ---
+        function createFloatingHearts() {
+            const container = document.getElementById('floatingHearts');
+            const heartCount = 20;
+            
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerHTML = '❤️';
+                
+                // Random position and animation delay
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.animationDelay = `${Math.random() * 15}s`;
+                heart.style.fontSize = `${10 + Math.random() * 20}px`;
+                heart.style.opacity = `${0.2 + Math.random() * 0.3}`;
+                
+                container.appendChild(heart);
+            }
+        }
+
+        // --- Gemini API Interaction ---
+        async function ChattingWithGemini(userProblem) {
+            if (!GEMINI_API_KEY) {
+                return "Anand, API key set nahi kiya tune! 😠";
+            }
+
+            // Add user message to local History for API context
+            History.push({
+                role: 'user',
+                parts: [{ text: userProblem }]
+            });
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+            const requestBody = {
+                contents: History, // Send the current chat history
+                systemInstruction: { // Define the persona/behavior for the model
+                    parts: [{ text: systemInstructionText }]
+                },
+                generationConfig: {
+                    temperature: 0.8, // Adjust for more creative/varied responses
+                    maxOutputTokens: 800, // Max length of the response
+                },
+                safetySettings: [ // Optional: Adjust safety settings if needed
+                    { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+                    { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" }
+                ]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    console.error("API Error Response:", responseData);
+                    const errorMessage = responseData.error?.message || `API request failed with status ${response.status}`;
+                    // Add error to history so it doesn't break the flow
+                    History.push({
+                        role: 'model',
+                        parts: [{ text: `API Error: ${errorMessage}` }]
+                    });
+                    return `Oh no, Anand! Kuch problem ho gayi API se baat karte waqt 🥺 (${errorMessage}). Check console for details.`;
+                }
+                
+                let botResponseText = "Sorry Anand, main samajh nahi paayi... kuch aur try kar? 🤔";
+                if (responseData.candidates && responseData.candidates.length > 0 &&
+                    responseData.candidates[0].content && responseData.candidates[0].content.parts &&
+                    responseData.candidates[0].content.parts.length > 0) {
+                    botResponseText = responseData.candidates[0].content.parts[0].text;
+                } else if (responseData.promptFeedback && responseData.promptFeedback.blockReason) {
+                    botResponseText = `Anand, main ispe react nahi kar sakti: ${responseData.promptFeedback.blockReason}. Kuch aur pooch le.`;
+                    console.warn("Prompt blocked:", responseData.promptFeedback);
+                } else {
+                    console.warn("Unexpected API response structure:", responseData);
+                }
+
+                // Add AI's response to History
+                History.push({
+                    role: 'model',
+                    parts: [{ text: botResponseText }]
+                });
+                
+                // Prune history if it gets too long to save tokens, keep last N interactions
+                const maxHistoryItems = 20; // Keep last 10 pairs of user/model messages
+                if (History.length > maxHistoryItems) {
+                    History.splice(0, History.length - maxHistoryItems);
+                }
+
+                return botResponseText;
+
+            } catch (error) {
+                console.error("Error fetching from Gemini API:", error);
+                History.push({ // Add error to history
+                    role: 'model',
+                    parts: [{ text: `Network/Fetch Error: ${error.message}` }]
+                });
+                return `Aiyo! Network mein kuch issue lag raha hai, Anand 🥺 (${error.message}). Check your connection or console.`;
+            }
+        }
+
+        // --- Frontend UI Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create floating hearts background
+            createFloatingHearts();
+            
+            const chatMessagesEl = document.getElementById('chatMessages');
+            const userInputEl = document.getElementById('userInput');
+            const sendButtonEl = document.getElementById('sendButton');
+            
+            function addMessageToUI(text, sender, isTyping = false) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', sender);
+                
+                if (isTyping) {
+                    messageElement.classList.add('typing');
+                    messageElement.innerHTML = `
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    `;
+                } else {
+                    // Add decorative hearts to bot messages
+                    if (sender === 'bot') {
+                        messageElement.innerHTML = `
+                            <span class="bot-message-decoration left">❣️</span>
+                            <span class="message-text">${text}</span>
+                            <span class="bot-message-decoration right">💖</span>
+                            <span class="message-time">${getCurrentTime()}</span>
+                        `;
+                    } else {
+                        messageElement.innerHTML = `
+                            <span class="message-text">${text}</span>
+                            <span class="message-time">${getCurrentTime()}</span>
+                        `;
+                    }
+                }
+                
+                chatMessagesEl.appendChild(messageElement);
+                chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+                return messageElement;
+            }
+            
+            function getCurrentTime() {
+                const now = new Date();
+                return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            }
+
+            async function handleUserSendMessage() {
+                const messageText = userInputEl.value.trim();
+                if (messageText === '') return;
+
+                addMessageToUI(messageText, 'user');
+                userInputEl.value = '';
+                userInputEl.focus();
+
+                const typingIndicator = addMessageToUI('', 'bot', true);
+
+                try {
+                    const botResponseText = await ChattingWithGemini(messageText);
+                    chatMessagesEl.removeChild(typingIndicator);
+                    addMessageToUI(botResponseText, 'bot');
+                } catch (error) {
+                    console.error("Unhandled error in send message:", error);
+                    chatMessagesEl.removeChild(typingIndicator);
+                    addMessageToUI("Oops! Bahut badi gadbad ho gayi, Anand. 😭 Check the console.", 'bot');
+                }
+            }
+
+            sendButtonEl.addEventListener('click', handleUserSendMessage);
+            userInputEl.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    handleUserSendMessage();
+                }
+            });
+            
+            // Focus on input when page loads
+            userInputEl.focus();
+        });
+    </script>
+</body>
+</html>
